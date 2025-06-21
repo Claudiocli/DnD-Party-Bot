@@ -17,7 +17,7 @@ class CreateCampaign(commands.Cog):
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.self.locales = {
+        self.locales = {
             "it": {
                 "already_exists": "Il nome selezionato esiste già",
                 "created_success": "La campagna è stata creata correttamente",
