@@ -101,6 +101,7 @@ class CreateCampaign(commands.Cog):
                 logging.info("Campaign successfully created")
         except Exception as e:
             logging.error(f"[CreateCampaign] An error occurred: {e}")
+            locale = interaction.locale if interaction.locale in LOCALES else "eng"
             await interaction.followup.send(content=LOCALES[locale]["generic_error"], ephemeral=False)
         finally:
             mongo_client.close()
