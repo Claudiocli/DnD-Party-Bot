@@ -10,23 +10,6 @@ from util.db import MongoSync
 
 load_dotenv()
 
-locales = {
-    "it": {
-        "already_exists": "Il nome selezionato esiste già",
-        "created_success": "La campagna è stata creata correttamente",
-        "Newbie": "Sei di livello troppo basso per creare una campagna!",
-        "Paladin_already": "Hai già una campagna! Sali di livello per poterne creare delle altre!",
-        "generic_error": "Si è verificato un errore",
-    },
-    "eng": {
-        "already_exists": "Name selected already exists",
-        "created_success": "Campaign created successfully",
-        "Newbie": "You have too low level to create a campaign!",
-        "Paladin_already": "You already have a campaign! Level up to create other campaign!",
-        "generic_error": "An error has occurred",
-    }
-}
-
 def get_random_color() -> Colour:
     return Colour(random.randint(0, 0xFFFFFF))
 
@@ -41,7 +24,24 @@ class CreateCampaign(commands.Cog):
     @app_commands.describe(name="Name of your campaign")
     async def create_campaign(self, interaction: discord.Interaction, name: str):
         await interaction.response.defer(ephemeral=False)
-        
+
+        locales = {
+            "it": {
+                "already_exists": "Il nome selezionato esiste già",
+                "created_success": "La campagna è stata creata correttamente",
+                "Newbie": "Sei di livello troppo basso per creare una campagna!",
+                "Paladin_already": "Hai già una campagna! Sali di livello per poterne creare delle altre!",
+                "generic_error": "Si è verificato un errore",
+            },
+            "eng": {
+                "already_exists": "Name selected already exists",
+                "created_success": "Campaign created successfully",
+                "Newbie": "You have too low level to create a campaign!",
+                "Paladin_already": "You already have a campaign! Level up to create other campaign!",
+                "generic_error": "An error has occurred",
+            }
+        }
+                
         member = interaction.user
         
         if any(role.name == "Newbie" for role in member.roles):
