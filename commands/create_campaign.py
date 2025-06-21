@@ -14,18 +14,10 @@ def get_random_color() -> Colour:
     return Colour(random.randint(0, 0xFFFFFF))
 
 class CreateCampaign(commands.Cog):
+
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-
-    @app_commands.command(
-        name="create_campaign",
-        description="Create your DND campaign!"
-    )
-    @app_commands.describe(name="Name of your campaign")
-    async def create_campaign(self, interaction: discord.Interaction, name: str):
-        await interaction.response.defer(ephemeral=False)
-
-        locales = {
+        self.self.locales = {
             "it": {
                 "already_exists": "Il nome selezionato esiste già",
                 "created_success": "La campagna è stata creata correttamente",
@@ -41,12 +33,20 @@ class CreateCampaign(commands.Cog):
                 "generic_error": "An error has occurred",
             }
         }
+
+    @app_commands.command(
+        name="create_campaign",
+        description="Create your DND campaign!"
+    )
+    @app_commands.describe(name="Name of your campaign")
+    async def create_campaign(self, interaction: discord.Interaction, name: str):
+        await interaction.response.defer(ephemeral=False)
                 
         member = interaction.user
         
         if any(role.name == "Newbie" for role in member.roles):
-            locale = interaction.locale if interaction.locale in locales else "eng"
-            await interaction.followup.send(content=locales[locale]["Newbie"])
+            locale = interaction.locale if interaction.locale in self.locales else "eng"
+            await interaction.followup.send(content=self.locales[locale]["Newbie"])
             return
 
         mongo_client = MongoSync.get_client()
@@ -55,8 +55,8 @@ class CreateCampaign(commands.Cog):
 
         try:
             if campaigns.find_one({"name": name}):
-                locale = interaction.locale if interaction.locale in locales else "eng"
-                await interaction.followup.send(content=locales[locale]["already_exists"], ephemeral=True)
+                locale = interaction.locale if interaction.locale in self.locales else "eng"
+                await interaction.followup.send(content=self.locales[locale]["already_exists"], ephemeral=True)
                 logging.warning("Campaign already exists")
                 return
             else:
@@ -95,12 +95,12 @@ class CreateCampaign(commands.Cog):
 
                 await member.add_roles(role_dm)
 
-                locale = interaction.locale if interaction.locale in locales else "eng"
-                await interaction.followup.send(content=locales[locale]["created_success"], ephemeral=False)
+                locale = interaction.locale if interaction.locale in self.locales else "eng"
+                await interaction.followup.send(content=self.locales[locale]["created_success"], ephemeral=False)
                 logging.info("Campaign successfully created")
         except Exception as e:
             logging.error(f"[CreateCampaign] An error occurred: {e}")
-            await interaction.followup.send(content=locales[locale]["generic_error"], ephemeral=False)
+            await interaction.followup.send(content=self.locales[locale]["generic_error"], ephemeral=False)
         finally:
             mongo_client.close()
             logging.info("Mongo Connection closed")
