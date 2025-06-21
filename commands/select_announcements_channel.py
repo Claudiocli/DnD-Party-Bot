@@ -70,7 +70,7 @@ class SelectAnnouncementsChannel(commands.Cog):
             logging.error(f"[MONGODB ERROR] Error on inserting announcement channel in db: {e}")
             await interaction.response.send_message("An error occurred while updating the database", ephemeral=False)
         finally:
-            client_mongo.close()
+            MongoSync.close_client()
 
 # Cog setup
 async def setup(bot: commands.Bot):

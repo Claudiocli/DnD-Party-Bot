@@ -104,7 +104,7 @@ class CreateCampaign(commands.Cog):
             locale = interaction.locale if interaction.locale in LOCALES else "eng"
             await interaction.followup.send(content=LOCALES[locale]["generic_error"], ephemeral=False)
         finally:
-            mongo_client.close()
+            MongoSync.close_client()
             logging.info("Mongo Connection closed")
 
 # Cog setup

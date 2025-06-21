@@ -70,7 +70,7 @@ class AddToCampaign(commands.Cog):
             logging.error(f"[ERROR] - {e}")
             await interaction.followup.send(content=locales[locale]["generic_error"])
         finally:
-            client_mongo.close()
+            MongoSync.close_client()
 
     @add.autocomplete("name")
     async def add_name_autocomplete(self, interaction: "Interaction", current: str):
