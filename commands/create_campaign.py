@@ -8,6 +8,23 @@ from dotenv import load_dotenv
 
 from util.db import MongoSync
 
+LOCALES = {
+    "it": {
+        "already_exists": "Il nome selezionato esiste già",
+        "created_success": "La campagna è stata creata correttamente",
+        "Newbie": "Sei di livello troppo basso per creare una campagna!",
+        "Paladin_already": "Hai già una campagna! Sali di livello per poterne creare delle altre!",
+        "generic_error": "Si è verificato un errore",
+    },
+    "eng": {
+        "already_exists": "Name selected already exists",
+        "created_success": "Campaign created successfully",
+        "Newbie": "You have too low level to create a campaign!",
+        "Paladin_already": "You already have a campaign! Level up to create other campaign!",
+        "generic_error": "An error has occurred",
+    }
+}
+
 load_dotenv()
 
 def get_random_color() -> Colour:
@@ -17,22 +34,6 @@ class CreateCampaign(commands.Cog):
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.locales = {
-            "it": {
-                "already_exists": "Il nome selezionato esiste già",
-                "created_success": "La campagna è stata creata correttamente",
-                "Newbie": "Sei di livello troppo basso per creare una campagna!",
-                "Paladin_already": "Hai già una campagna! Sali di livello per poterne creare delle altre!",
-                "generic_error": "Si è verificato un errore",
-            },
-            "eng": {
-                "already_exists": "Name selected already exists",
-                "created_success": "Campaign created successfully",
-                "Newbie": "You have too low level to create a campaign!",
-                "Paladin_already": "You already have a campaign! Level up to create other campaign!",
-                "generic_error": "An error has occurred",
-            }
-        }
 
     @app_commands.command(
         name="create_campaign",
@@ -45,8 +46,8 @@ class CreateCampaign(commands.Cog):
         member = interaction.user
         
         if any(role.name == "Newbie" for role in member.roles):
-            locale = interaction.locale if interaction.locale in self.locales else "eng"
-            await interaction.followup.send(content=self.locales[locale]["Newbie"])
+            locale = interaction.locale if interaction.locale in LOCALES else "eng"
+            await interaction.followup.send(content=LOCALES[locale]["Newbie"])
             return
 
         mongo_client = MongoSync.get_client()
@@ -55,8 +56,8 @@ class CreateCampaign(commands.Cog):
 
         try:
             if campaigns.find_one({"name": name}):
-                locale = interaction.locale if interaction.locale in self.locales else "eng"
-                await interaction.followup.send(content=self.locales[locale]["already_exists"], ephemeral=True)
+                locale = interaction.locale if interaction.locale in LOCALES else "eng"
+                await interaction.followup.send(content=LOCALES[locale]["already_exists"], ephemeral=True)
                 logging.warning("Campaign already exists")
                 return
             else:
@@ -95,12 +96,12 @@ class CreateCampaign(commands.Cog):
 
                 await member.add_roles(role_dm)
 
-                locale = interaction.locale if interaction.locale in self.locales else "eng"
-                await interaction.followup.send(content=self.locales[locale]["created_success"], ephemeral=False)
+                locale = interaction.locale if interaction.locale in LOCALES else "eng"
+                await interaction.followup.send(content=LOCALES[locale]["created_success"], ephemeral=False)
                 logging.info("Campaign successfully created")
         except Exception as e:
             logging.error(f"[CreateCampaign] An error occurred: {e}")
-            await interaction.followup.send(content=self.locales[locale]["generic_error"], ephemeral=False)
+            await interaction.followup.send(content=LOCALES[locale]["generic_error"], ephemeral=False)
         finally:
             mongo_client.close()
             logging.info("Mongo Connection closed")
