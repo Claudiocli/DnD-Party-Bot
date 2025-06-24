@@ -13,7 +13,7 @@ class MongoSync:
     def get_client(cls):
         if cls.__client is None:
             cls.__client = MongoClient(
-                f"mongodb+srv://{os.getenv('MONGO_USER')}:{os.getenv('MONGO_PASSWD')}@clusterdnd.qxfls1g.mongodb.net/?authSource=admin&retryWrites=true&w=majority&appName=ClusterDnD&directConnection=true",
+                f"mongodb+srv://{os.getenv('MONGO_USER')}:{os.getenv('MONGO_PASSWD')}@clusterdnd.qxfls1g.mongodb.net/?authSource=admin&retryWrites=true&w=majority&appName=ClusterDnD",
             )
         return cls.__client
 
