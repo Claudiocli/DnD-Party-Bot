@@ -5,6 +5,7 @@ import discord
 from discord import app_commands, ChannelType, Permissions, Colour
 from discord.ext import commands
 from dotenv import load_dotenv
+from asyncio import to_thread
 
 from util.db import MongoSync
 
@@ -54,14 +55,16 @@ class CreateCampaign(commands.Cog):
         db = mongo_client[os.getenv("MONGO_DB_NAME")]
         campaigns = db[os.getenv("MONGO_COLLECTION_NAME")]
 
+        c = await to_thread(campaigns.find_one, {"name": name})
+
         try:
-            if campaigns.find_one({"name": name}):
+            if c:
                 locale = interaction.locale if interaction.locale in LOCALES else "eng"
                 await interaction.followup.send(content=LOCALES[locale]["already_exists"], ephemeral=True)
                 logging.warning("Campaign already exists")
                 return
             else:
-                campaigns.insert_one({
+                await to_thread(campaigns.insert_one, {
                     "name": name,
                     "elements": {
                         "dm": interaction.user.id,
