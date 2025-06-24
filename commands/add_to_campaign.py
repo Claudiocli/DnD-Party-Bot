@@ -2,10 +2,11 @@ import os
 import logging
 from discord import Interaction, User, app_commands
 from discord.ext import commands
-from pymongo.collection import Collection
 from dotenv import load_dotenv
+from asyncio import to_thread
 
-from util.db import MongoSync
+from util.db import TinySync
+from tinydb import Query
 
 load_dotenv()
 
@@ -26,10 +27,11 @@ locales = {
     }
 }
 
-def get_campaigns_collection() -> "Collection":
-    client = MongoSync.get_client()
-    db = client[os.getenv("MONGO_DB_NAME")]
-    return db[os.getenv("MONGO_COLLECTION_NAME")], client
+# def get_campaigns_collection() -> "Collection":
+#     # client = MongoSync.get_client()
+#     # db = client[os.getenv("MONGO_DB_NAME")]
+#     # return db[os.getenv("MONGO_COLLECTION_NAME")], client
+#     return TinySync.get_collection()
 
 class AddToCampaign(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -45,9 +47,12 @@ class AddToCampaign(commands.Cog):
         await interaction.response.defer(ephemeral=False)
 
         logging.info("[INFO] - Trying to add a user to a campaign")
-        campaigns, client_mongo = get_campaigns_collection()
+        # campaigns, client_mongo = get_campaigns_collection()
+        campaigns = TinySync.get_collection()
+        cq = Query()
+
         try:
-            result = campaigns.find_one({"name": name})
+            result = await to_thread(campaigns.get, cq.name == name)
             logging.info("[INFO] - Finding a campaign")
             guild = interaction.guild
             if result:
@@ -60,7 +65,8 @@ class AddToCampaign(commands.Cog):
                 if role:
                     await member.add_roles(role)
                     logging.info(f"[INFO : {guild.name}] - Player Role assigned")
-                    campaigns.update_one({"name": name}, {"$push": {"players": user.id}})
+                    campaigns.update({"players": result["players"] + [user.id]}, cq.name == name)
+                    # campaigns.update_one({"name": name}, {"$push": {"players": user.id}})
                     await interaction.followup.send(content=f"{locales[locale]['user_added']}{user.name}")
                 else:
                     await interaction.followup.send(content=locales[locale]["player_role_not_found"])
@@ -70,7 +76,8 @@ class AddToCampaign(commands.Cog):
             logging.error(f"[ERROR] - {e}")
             await interaction.followup.send(content=locales[locale]["generic_error"])
         finally:
-            MongoSync.close_client()
+            # MongoSync.close_client()
+            TinySync.close()
 
     @add.autocomplete("name")
     async def add_name_autocomplete(self, interaction: "Interaction", current: str):

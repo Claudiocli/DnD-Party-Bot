@@ -55,13 +55,12 @@ class CreateCampaign(commands.Cog):
         # mongo_client = MongoSync.get_client()
         # db = mongo_client[os.getenv("MONGO_DB_NAME")]
         # campaigns = db[os.getenv("MONGO_COLLECTION_NAME")]
-        campaigns = TinySync.get_collection(os.getenv("MONGO_DB_NAME"), os.getenv("MONGO_COLLECTION_NAME"))
+        campaigns = TinySync.get_collection()
         cq = Query()
 
         # c = await to_thread(campaigns.find_one, {"name": name})
-        c = await to_thread(campaigns.get, cq.name == name)
-
         try:
+            c = await to_thread(campaigns.get, cq.name == name)
             if c:
                 locale = interaction.locale if interaction.locale in LOCALES else "eng"
                 await interaction.followup.send(content=LOCALES[locale]["already_exists"], ephemeral=True)
