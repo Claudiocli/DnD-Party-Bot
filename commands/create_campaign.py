@@ -67,13 +67,13 @@ class CreateCampaign(commands.Cog):
                 logging.warning("Campaign already exists")
                 return
             else:
-                await to_thread(campaigns.upsert, {
+                await to_thread(campaigns.insert, {
                     "name": name,
                     "elements": {
                         "dm": interaction.user.id,
                         "players": []
                     }
-                }, cq.name == name)
+                })
                 guild = interaction.guild
                 logging.info(f"[INFO : {guild.name}] - Starting to create roles")
 
