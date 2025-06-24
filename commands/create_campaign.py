@@ -7,7 +7,8 @@ from discord.ext import commands
 from dotenv import load_dotenv
 from asyncio import to_thread
 
-from util.db import MongoSync
+from util.db import TinySync
+from tinydb import Query
 
 LOCALES = {
     "it": {
@@ -51,11 +52,14 @@ class CreateCampaign(commands.Cog):
             await interaction.followup.send(content=LOCALES[locale]["Newbie"])
             return
 
-        mongo_client = MongoSync.get_client()
-        db = mongo_client[os.getenv("MONGO_DB_NAME")]
-        campaigns = db[os.getenv("MONGO_COLLECTION_NAME")]
+        # mongo_client = MongoSync.get_client()
+        # db = mongo_client[os.getenv("MONGO_DB_NAME")]
+        # campaigns = db[os.getenv("MONGO_COLLECTION_NAME")]
+        campaigns = TinySync.get_collection(os.getenv("MONGO_DB_NAME"), os.getenv("MONGO_COLLECTION_NAME"))
+        cq = Query()
 
-        c = await to_thread(campaigns.find_one, {"name": name})
+        # c = await to_thread(campaigns.find_one, {"name": name})
+        c = await to_thread(campaigns.get, cq.name == name)
 
         try:
             if c:
@@ -64,7 +68,7 @@ class CreateCampaign(commands.Cog):
                 logging.warning("Campaign already exists")
                 return
             else:
-                await to_thread(campaigns.insert_one, {
+                await to_thread(campaigns.insert, {
                     "name": name,
                     "elements": {
                         "dm": interaction.user.id,
@@ -107,7 +111,8 @@ class CreateCampaign(commands.Cog):
             locale = interaction.locale if interaction.locale in LOCALES else "eng"
             await interaction.followup.send(content=LOCALES[locale]["generic_error"], ephemeral=False)
         finally:
-            MongoSync.close_client()
+            # MongoSync.close_client()
+            TinySync.close()
             logging.info("Mongo Connection closed")
 
 # Cog setup

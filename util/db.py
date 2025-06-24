@@ -3,6 +3,8 @@ import os
 from pymongo import MongoClient
 import sqlite3
 from datetime import datetime
+from tinydb import TinyDB, Query
+from threading import Lock
 
 load_dotenv()
 
@@ -42,4 +44,19 @@ class SqlDB:
     def mark_poll_processed(poll_id):
         with sqlite3.connect(os.getenv('POLLS_DB_PATH')) as conn:
             conn.execute("UPDATE polls SET processed = 1 WHERE id = ?", (poll_id,))
-    
+
+class TinySync:
+    _db = None
+    _lock = Lock()
+
+    @classmethod
+    def get_collection(cls):
+        if cls._db is None:
+            cls._db = TinyDB(f"dnd_db.json")
+        return cls._db.table("campaigns")
+
+    @classmethod
+    def close(cls):
+        if cls._db is not None:
+            cls._db.close()
+            cls._db = None
