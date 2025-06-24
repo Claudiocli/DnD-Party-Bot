@@ -93,7 +93,7 @@ class CreateCampaign(commands.Cog):
                 category = await guild.create_category(name=name)
                 await category.set_permissions(role_dm, view_channel=True, mute_members=True)
                 await category.set_permissions(role_pl, view_channel=True)
-                await category.set_permissions(role_e, view_channel=False)
+                await category.set_permissions(role_e, view_channel=True)
 
                 await guild.create_stage_channel(name=f"{name}_vocal", category=category)
                 await guild.create_text_channel(name=f"{name}_text", category=category)
