@@ -67,13 +67,13 @@ class CreateCampaign(commands.Cog):
                 logging.warning("Campaign already exists")
                 return
             else:
-                await to_thread(campaigns.insert, {
+                await to_thread(campaigns.upsert, {
                     "name": name,
                     "elements": {
                         "dm": interaction.user.id,
                         "players": []
                     }
-                })
+                }, cq.name == name)
                 guild = interaction.guild
                 logging.info(f"[INFO : {guild.name}] - Starting to create roles")
 
@@ -112,7 +112,8 @@ class CreateCampaign(commands.Cog):
         finally:
             # MongoSync.close_client()
             TinySync.close()
-            logging.info("Mongo Connection closed")
+            # logging.info("Mongo Connection closed")
+            logging.info("DB Connection closed")
 
 # Cog setup
 async def setup(bot: commands.Bot):
