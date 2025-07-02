@@ -91,7 +91,8 @@ class CreateCampaign(commands.Cog):
 
                 logging.info(f"[INFO : {guild.name}] - Starting to create channels")
                 category = await guild.create_category(name=name)
-                await category.set_permissions(role_dm, view_channel=True, mute_members=True)
+                # Basic view permission for the category
+                await category.set_permissions(role_dm, view_channel=True, mute_members=True, manage_messages=True, create_events=True)
                 await category.set_permissions(role_pl, view_channel=True)
                 await category.set_permissions(role_e, view_channel=False)
 
@@ -101,6 +102,9 @@ class CreateCampaign(commands.Cog):
                 await guild.create_text_channel(name=f"{name}_organize", category=category)
                 # To make everyone only see the stage channel
                 await guild.get_channel(name=f"{name}_vocal").set_permissions(role_e, view_channel=True)
+                # Permissions to handle the stage and creating events for the DM
+                await guild.get_channel(name=f"{name}_vocal").set_permissions(role_dm, manage_channels=True, mute_members=True, move_members=True, create_events=True)
+                await guild.get_channel(name=f"{name}_vocal").set_permissions(role_pl, manage_channels=True, mute_members=True, move_members=True)
 
                 await member.add_roles(role_dm)
 
