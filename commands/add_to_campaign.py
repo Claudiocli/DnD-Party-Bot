@@ -97,6 +97,7 @@ class AddToCampaign(commands.Cog):
                 await user_interaction.response.send_message(f"{locales[locale]['users_added']}{', '.join([user.name for user in user_select.values])}")
 
                 TinySync.close()
+                view.stop()
 
             user_select.callback = user_callback
 
