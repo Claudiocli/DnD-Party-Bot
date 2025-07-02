@@ -41,11 +41,17 @@ class CreateCampaign(commands.Cog):
         name="create_campaign",
         description="Create your DND campaign!"
     )
-    @app_commands.describe(name="Name of your campaign", user="User to set as DM")
+    @app_commands.describe(name="Name of your campaign", user="ADMIN ONLY - User to set as DM")
     async def create_campaign(self, interaction: discord.Interaction, name: str, user: "User" = None):
         await interaction.response.defer(ephemeral=False)
-                
-        member = interaction.user if user != None else user
+        
+        member = interaction.user
+        admin = False
+        for r in interaction.user.roles:
+            if r.permissions.administrator:
+                admin = True
+        if user and admin:
+            member = user
         
         if any(role.name == "Newbie" for role in member.roles):
             locale = interaction.locale if interaction.locale in LOCALES else "eng"
