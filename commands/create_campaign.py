@@ -54,13 +54,9 @@ class CreateCampaign(commands.Cog):
             await interaction.followup.send(content=LOCALES[locale]["Newbie"])
             return
 
-        # mongo_client = MongoSync.get_client()
-        # db = mongo_client[os.getenv("MONGO_DB_NAME")]
-        # campaigns = db[os.getenv("MONGO_COLLECTION_NAME")]
         campaigns = TinySync.get_collection()
         cq = Query()
 
-        # c = await to_thread(campaigns.find_one, {"name": name})
         try:
             c = await to_thread(campaigns.get, cq.name == name)
             if c:
@@ -71,10 +67,8 @@ class CreateCampaign(commands.Cog):
             else:
                 await to_thread(campaigns.insert, {
                     "name": name,
-                    "elements": {
-                        "dm": interaction.user.id,
-                        "players": []
-                    }
+                    "dm": member,
+                    "players": []
                 })
                 guild = interaction.guild
                 logging.info(f"[INFO : {guild.name}] - Starting to create roles")
@@ -118,9 +112,7 @@ class CreateCampaign(commands.Cog):
             locale = interaction.locale if interaction.locale in LOCALES else "eng"
             await interaction.followup.send(content=LOCALES[locale]["generic_error"], ephemeral=False)
         finally:
-            # MongoSync.close_client()
             TinySync.close()
-            # logging.info("Mongo Connection closed")
             logging.info("DB Connection closed")
 
 # Cog setup
