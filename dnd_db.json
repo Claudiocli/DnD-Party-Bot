@@ -89,15 +89,30 @@
     },
     "5": {
       "name": "Warped Hills",
-      "elements": { "dm": 324657126976913418, "players": [] }
+      "dm":{
+        "id": 324657126976913418
+      },
+      "players": [
+
+      ] 
     },
     "6": {
       "name": "Miracle Island",
-      "elements": { "dm": 324657126976913418, "players": [] }
+      "dm":{
+        "id":324657126976913418
+      },
+      "players": [
+
+      ]
     },
     "7": {
       "name": "La montagna a mezz\u2019aria",
-      "elements": { "dm": 955850137475899393, "players": [] }
+      "dm": {
+        "id":955850137475899393
+      },
+      "players": [
+
+      ]
     }
   }
 }
