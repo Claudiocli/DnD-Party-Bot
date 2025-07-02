@@ -2,7 +2,7 @@ import os
 import random
 import logging
 import discord
-from discord import app_commands, ChannelType, Permissions, Colour
+from discord import app_commands, ChannelType, Permissions, Colour, User
 from discord.ext import commands
 from dotenv import load_dotenv
 from asyncio import to_thread
@@ -41,11 +41,11 @@ class CreateCampaign(commands.Cog):
         name="create_campaign",
         description="Create your DND campaign!"
     )
-    @app_commands.describe(name="Name of your campaign")
-    async def create_campaign(self, interaction: discord.Interaction, name: str):
+    @app_commands.describe(name="Name of your campaign", user="User to set as DM")
+    async def create_campaign(self, interaction: discord.Interaction, name: str, user: "User" = None):
         await interaction.response.defer(ephemeral=False)
                 
-        member = interaction.user
+        member = interaction.user if user != None else user
         
         if any(role.name == "Newbie" for role in member.roles):
             locale = interaction.locale if interaction.locale in LOCALES else "eng"
