@@ -2,45 +2,35 @@
   "campaigns": {
     "1": {
       "name": "starter set",
-      "elements": {
-        "dm": {
-          "id": "955850137475899393",
-          "bot": false,
-          "system": false,
-          "flags": { "bitfield": 0 },
-          "username": "lindac9567",
-          "globalName": "Maya",
-          "discriminator": "0",
-          "avatar": "8b9d6ed1e2bffad0513dad73c3fefe7e",
-          "banner": null,
-          "accentColor": null,
-          "avatarDecoration": null
-        },
-        "players": []
+      "dm": {
+        "id": "955850137475899393",
+        "bot": false,
+        "system": false,
+        "flags": { "bitfield": 0 },
+        "username": "lindac9567",
+        "globalName": "Maya",
+        "discriminator": "0",
+        "avatar": "8b9d6ed1e2bffad0513dad73c3fefe7e",
+        "banner": null,
+        "accentColor": null,
+        "avatarDecoration": null
       },
-      "players": [
-        "1063867302916935741",
-        "1063867302916935741",
-        "1063867302916935741"
-      ]
+      "players": [1063867302916935741, 324657126976913418, 257059089086021633]
     },
     "2": {
       "name": "Draghi dell'isola delle tempeste",
-      "elements": {
-        "dm": {
-          "id": "553632840013840422",
-          "bot": false,
-          "system": false,
-          "flags": { "bitfield": 0 },
-          "username": "zannabianca991",
-          "globalName": null,
-          "discriminator": "0",
-          "avatar": "845fae5159b5de655743fb1c32196333",
-          "banner": null,
-          "accentColor": null,
-          "avatarDecoration": null
-        },
-        "players": []
+      "dm": {
+        "id": "553632840013840422",
+        "bot": false,
+        "system": false,
+        "flags": { "bitfield": 0 },
+        "username": "zannabianca991",
+        "globalName": null,
+        "discriminator": "0",
+        "avatar": "845fae5159b5de655743fb1c32196333",
+        "banner": null,
+        "accentColor": null,
+        "avatarDecoration": null
       },
       "players": [
         "1154794282604044379",
@@ -51,59 +41,49 @@
     },
     "3": {
       "name": "Warna Lands",
-      "elements": {
-        "dm": {
-          "id": "257059089086021633",
-          "bot": false,
-          "system": false,
-          "flags": { "bitfield": 0 },
-          "username": "nambon",
-          "globalName": "Nambon",
-          "discriminator": "0",
-          "avatar": "93c49a70aa45900a3008894dbd06c469",
-          "banner": null,
-          "accentColor": null,
-          "avatarDecoration": null
-        },
-        "players": []
+      "dm": {
+        "id": "257059089086021633",
+        "bot": false,
+        "system": false,
+        "flags": { "bitfield": 0 },
+        "username": "nambon",
+        "globalName": "Nambon",
+        "discriminator": "0",
+        "avatar": "93c49a70aa45900a3008894dbd06c469",
+        "banner": null,
+        "accentColor": null,
+        "avatarDecoration": null
       },
       "players": [
         "324657126976913418",
         "293779849183756290",
         "911583308629024788",
-        "911583308629024788",
         "614910262742351911",
         "1220940291318485153",
-        "1220940291318485153"
+        567088406803251250
       ]
     },
     "4": {
       "name": "Eroi del Multiverso",
-      "elements": {
-        "dm": {
-          "id": "684850058768023606",
-          "bot": false,
-          "system": false,
-          "flags": { "bitfield": 0 },
-          "username": "r.v.1012",
-          "globalName": null,
-          "discriminator": "0",
-          "avatar": "51b4472a76582aa1acb77e6ab0890c27",
-          "banner": null,
-          "accentColor": null,
-          "avatarDecoration": null
-        },
-        "players": []
+      "dm": {
+        "id": "684850058768023606",
+        "bot": false,
+        "system": false,
+        "flags": { "bitfield": 0 },
+        "username": "r.v.1012",
+        "globalName": null,
+        "discriminator": "0",
+        "avatar": "51b4472a76582aa1acb77e6ab0890c27",
+        "banner": null,
+        "accentColor": null,
+        "avatarDecoration": null
       },
       "players": [
         "567088406803251250",
         "324657126976913418",
         "689804194106179617",
-        "324657126976913418",
         "257059089086021633",
         "955850137475899393",
-        "257059089086021633",
-        "902179340748455996",
         "902179340748455996"
       ]
     }

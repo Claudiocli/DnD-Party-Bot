@@ -1,13 +1,13 @@
-import os
 import random
 import logging
 import discord
-from discord import app_commands, ChannelType, Permissions, Colour, User
+from discord import app_commands, Permissions, Colour, User
 from discord.ext import commands
 from dotenv import load_dotenv
 from asyncio import to_thread
 
 from util.db import TinySync
+from util.tools import is_user_admin
 from tinydb import Query
 
 LOCALES = {
@@ -46,11 +46,7 @@ class CreateCampaign(commands.Cog):
         await interaction.response.defer(ephemeral=False)
         
         member = interaction.user
-        admin = False
-        for r in interaction.user.roles:
-            if r.permissions.administrator:
-                admin = True
-        if user and admin:
+        if user and is_user_admin(user):
             member = user
         
         if any(role.name == "Newbie" for role in member.roles):

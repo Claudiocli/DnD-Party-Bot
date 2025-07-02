@@ -1,3 +1,4 @@
+from typing import List
 from dotenv import load_dotenv
 import os
 from pymongo import MongoClient
@@ -55,6 +56,26 @@ class TinySync:
             cls._db = TinyDB(f"dnd_db.json")
         return cls._db.table("campaigns")
 
+    @classmethod
+    def get_all_campaigns(cls):
+        if cls._db is None:
+            cls._db = TinyDB(f"dnd_db.json")
+        return cls._db.table("campaigns").all()
+    
+    @classmethod
+    def get_all_campaigns_with_user(cls, id: int):
+        if cls._db is None:
+            cls._db = TinyDB(f"dnd_db.json")
+        q = Query()
+        return cls._db.table("campaigns").search(q.players.exists() and id in q.players)
+
+    @classmethod
+    def get_users_from_campaign(cls, campaign: str) -> List[int]:
+        if cls._db is None:
+            cls._db = TinyDB(f"dnd_db.json")
+        q = Query()
+        return cls._db.table("campaigns").search(q.name == campaign)[0]['players']
+    
     @classmethod
     def close(cls):
         if cls._db is not None:
