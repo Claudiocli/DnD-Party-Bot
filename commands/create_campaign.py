@@ -97,10 +97,11 @@ class CreateCampaign(commands.Cog):
                 await guild.create_text_channel(name=f"{name}_meme", category=category)
                 await guild.create_text_channel(name=f"{name}_organize", category=category)
                 # To make everyone only see the stage channel
-                await guild.get_channel(name=f"{name}_vocal").set_permissions(role_e, view_channel=True)
+                voice = await discord.utils.get(guild.voice_channels, name=f"{name}_vocal")
+                await voice.set_permissions(role_e, view_channel=True)
                 # Permissions to handle the stage and creating events for the DM
-                await guild.get_channel(name=f"{name}_vocal").set_permissions(role_dm, manage_channels=True, mute_members=True, move_members=True, create_events=True)
-                await guild.get_channel(name=f"{name}_vocal").set_permissions(role_pl, manage_channels=True, mute_members=True, move_members=True)
+                await voice.set_permissions(role_dm, manage_channels=True, mute_members=True, move_members=True, create_events=True)
+                await voice.set_permissions(role_pl, manage_channels=True, mute_members=True, move_members=True)
 
                 await member.add_roles(role_dm)
 
