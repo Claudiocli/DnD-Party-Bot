@@ -92,16 +92,15 @@ class CreateCampaign(commands.Cog):
                 await category.set_permissions(role_pl, view_channel=True)
                 await category.set_permissions(role_e, view_channel=False)
 
-                await guild.create_stage_channel(name=f"{name}_vocal", category=category)
+                vocal = await guild.create_stage_channel(name=f"{name}_vocal", category=category)
                 await guild.create_text_channel(name=f"{name}_text", category=category)
                 await guild.create_text_channel(name=f"{name}_meme", category=category)
                 await guild.create_text_channel(name=f"{name}_organize", category=category)
                 # To make everyone only see the stage channel
-                voice = await discord.utils.get(guild.voice_channels, name=f"{name}_vocal")
-                await voice.set_permissions(role_e, view_channel=True)
+                await vocal.set_permissions(role_e, view_channel=True)
                 # Permissions to handle the stage and creating events for the DM
-                await voice.set_permissions(role_dm, manage_channels=True, mute_members=True, move_members=True, create_events=True)
-                await voice.set_permissions(role_pl, manage_channels=True, mute_members=True, move_members=True)
+                await vocal.set_permissions(role_dm, manage_channels=True, mute_members=True, move_members=True, create_events=True)
+                await vocal.set_permissions(role_pl, manage_channels=True, mute_members=True, move_members=True)
 
                 await member.add_roles(role_dm)
 
