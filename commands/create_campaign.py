@@ -67,7 +67,7 @@ class CreateCampaign(commands.Cog):
             else:
                 await to_thread(campaigns.insert, {
                     "name": name,
-                    "dm": member,
+                    "dm": member.id,
                     "players": []
                 })
                 guild = interaction.guild
