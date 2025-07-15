@@ -46,8 +46,7 @@ class AddToCampaign(commands.Cog):
 
         view = View(timeout=None)
 
-        campaigns = (TinySync.get_all_campaigns() if is_user_admin(interaction.user)
-                     else TinySync.get_all_campaigns_with_user(interaction.user.id))
+        campaigns = TinySync.get_all_campaigns() if is_user_admin(interaction.user) else TinySync.get_all_campaigns_with_user(interaction.user.id)
         select_campaign = Select(
             placeholder="Seleziona una campagna",
             min_values=1,
