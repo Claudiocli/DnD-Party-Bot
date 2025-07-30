@@ -128,7 +128,7 @@ class AddToCampaign(commands.Cog):
 
     @add.error
     async def add_error(self, interaction: Interaction, error: Exception):
-        logging.error(f"Error in add command: {error.with_traceback()}")
+        logging.error(f"Error in add command: {error}")
         locale = interaction.locale if interaction.locale in locales else "eng"
         await interaction.followup.send(content=locales[locale]["generic_error"])
 
