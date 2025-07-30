@@ -1,7 +1,7 @@
-from discord import User
+from discord import Member
 
 
-def is_user_admin(user: "User") -> bool:
+def check_is_user_admin(user: "Member") -> bool:
     for r in user.roles:
         if r.permissions.administrator:
             return True

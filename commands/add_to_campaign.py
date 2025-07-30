@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from asyncio import to_thread
 
 from util.db import TinySync
-from util.tools import is_user_admin
+from util.tools import check_is_user_admin
 from tinydb import Query
 
 load_dotenv()
@@ -118,7 +118,7 @@ class AddToCampaign(commands.Cog):
         # 5 min (300 sec) to process input and close the interaction
         view = View(timeout=300)
 
-        if is_user_admin(interaction.user):
+        if check_is_user_admin(interaction.user):
             self.campaigns = TinySync.get_all_campaigns()
         else:
             self.campaigns = TinySync.get_all_campaigns_with_user(interaction.user.id)

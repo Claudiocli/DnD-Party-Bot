@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from asyncio import to_thread
 
 from util.db import TinySync
-from util.tools import is_user_admin
+from util.tools import check_is_user_admin
 from tinydb import Query
 
 LOCALES = {
@@ -46,7 +46,7 @@ class CreateCampaign(commands.Cog):
         await interaction.response.defer(ephemeral=False)
         
         member = interaction.user
-        if user and is_user_admin(user):
+        if user and check_is_user_admin(user):
             member = user
         
         if any(role.name == "Newbie" for role in member.roles):
