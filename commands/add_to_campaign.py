@@ -79,6 +79,8 @@ class AddToCampaign(commands.Cog):
             user_select.disabled = True
             self.user_select = user_select
 
+            return self.user_select
+
 
     def get_campaign_select(self, interaction: Interaction, locale: str) -> Select:
         select_campaign = Select(
