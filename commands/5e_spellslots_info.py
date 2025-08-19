@@ -1,4 +1,5 @@
 import logging
+import traceback
 import discord
 from typing import Optional
 from discord import app_commands
@@ -7,7 +8,8 @@ from math import floor
 
 locales = {
     "it":   {
-        "ask_for_classes": "Mi potresti dare le classi del tuo pg? Per favore, segui la seguente leggenda",
+        "ask_for_classes": "Mi potresti dire le classi del tuo pg? Per favore, segui la seguente leggenda",
+        "ask_for_class": "Mi potresti dire la classe del tuo pg?",
         "legend": "class:level\nE.g.:\n'warlock:1, cleric:2, wizard:6'",
         "level_text": "livello",
         "repsonse_intro": "Hai i seguenti slot incantesimo",
@@ -17,6 +19,7 @@ locales = {
     },
     "eng":  {
         "ask_for_classes": "Can you give me the classes of your pg? Please, refer to the following legend",
+        "ask_for_class": "Can you give me the class of your pg?",
         "legend": "class:level\nE.g.:\n'warlock:1, cleric:2, wizard:6'",
         "level_text": "level",
         "repsonse_intro": "Your spell slots are",
@@ -56,48 +59,47 @@ class SpellSlotInfo(commands.Cog):
     class PGBuilder:
         class PG:
             def __init__(self):
-                self.barbarian = None
-                self.bard = None
-                self.cleric = None
-                self.druid = None
-                self.fighter = None
-                self.monk = None
-                self.paladin = None
-                self.ranger = None
-                self.rogue = None
-                self.sorcerer = None
-                self.warlock = None
-                self.wizard = None
+                self.barbarian = 0
+                self.bard = 0
+                self.cleric = 0
+                self.druid = 0
+                self.fighter = 0
+                self.monk = 0
+                self.paladin = 0
+                self.ranger = 0
+                self.rogue = 0
+                self.sorcerer = 0
+                self.warlock = 0
+                self.wizard = 0
 
             def add_level(self, cls: str, level: int) -> None:
                 if cls == "barbarian":
-                    self.barbarian = level
+                    self.barbarian = int(level)
                 if cls == "bard":
-                    self.bard = level
+                    self.bard = int(level)
                 if cls == "cleric":
-                    self.cleric = level
+                    self.cleric = int(level)
                 if cls == "druid":
-                    self.druid = level
+                    self.druid = int(level)
                 if cls == "fighter":
-                    self.fighter = level
+                    self.fighter = int(level)
                 if cls == "monk":
-                    self.monk = level
+                    self.monk = int(level)
                 if cls == "paladin":
-                    self.paladin = level
+                    self.paladin = int(level)
                 if cls == "ranger":
-                    self.ranger = level
+                    self.ranger = int(level)
                 if cls == "rogue":
-                    self.rogue = level
+                    self.rogue = int(level)
                 if cls == "sorcerer":
-                    self.sorcerer = level
+                    self.sorcerer = int(level)
                 if cls == "warlock":
-                    self.warlock = level
+                    self.warlock = int(level)
                 if cls == "wizard":
-                    self.wizard = level
+                    self.wizard = int(level)
 
             def get_enchanter_level(self) -> int:
                 # bard + cleric + druid + sorcerer + wizzard + ⌊paladin/2⌋ + ⌊ranger/2⌋ + ⌊fighter/3⌋ + ⌊rogue/3⌋
-
                 return (
                     self.bard +
                     self.cleric +
@@ -145,54 +147,87 @@ class SpellSlotInfo(commands.Cog):
                 raise KeyError
 
         @classmethod
-        def parse(self, m: str) -> PG:
-            self.p = self.PG()
+        def parse(cls, m: str) -> 'SpellSlotInfo.PGBuilder.PG':
+            p = cls.PG()
             m = m.strip().lower().replace(" ", "").split(",")
             for c in m:
-                cl, l = c.split(":")[0], c.split(':')[1]
-                self.p.add_level(cl, l)
-            return self.p
+                try:
+                    cl, l = c.split(":")[0], c.split(':')[1]
+                    p.add_level(cl, l)
+                except Exception:
+                    raise SpellSlotInfo.FormatError("Invalid format")
+            return p
+        @classmethod
+        def single_parse(cls, m: str, l: int) -> 'SpellSlotInfo.PGBuilder.PG':
+            p = cls.PG()
+            m = m.strip().lower().replace(" ", "").split(",")[0]
+            try:
+                p.add_level(m, l)
+            except Exception:
+                raise SpellSlotInfo.FormatError("Invalid format")
+            return p
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @app_commands.command(
+    # Define the group
+    spell_info_group = app_commands.Group(
+        name="5e_info",
+        description="Info useful for 5th edition"
+    )
+
+    # Subcommand
+    @spell_info_group.command(
         name="spell_slots_info",
         description="Get how many spell slots your pg has"
     )
     @app_commands.describe(pg_level="Level of your PG", multiclass="If your pg has multiclassed")
-    @app_commands.Group(name="5e info")
-    async def spell_slot_info(self, interaction: discord.Interaction, pg_level: int, multiclass: Optional[bool] = False):
+    async def spell_slots_info(
+        self,
+        interaction: discord.Interaction,
+        pg_level: int,
+        multiclass: Optional[bool] = False
+    ):
         locale = interaction.locale if interaction.locale in locales else "eng"
-        if multiclass:
-            interaction.response.defer()
-            try:
-                # 2 min to let the user write the classes
-                interaction.response.send_message(f"{locales[locale]['ask_for_classes']} - {locales[locale]['legend']}")
+        await interaction.response.defer()
+        
+        try:
+            if multiclass:
+                await interaction.followup.send(f"{locales[locale]['ask_for_classes']} - {locales[locale]['legend']}")
                 msg = await interaction.client.wait_for('message', timeout=120)
-                pg = self.PGBuilder.parse(msg)
-
+                pg = self.PGBuilder.parse(msg.content)
                 slots = self.__MATRIX_MC_SPELL_SLOT[pg.get_enchanter_level()]
-                r = f"""
-1 {locales[locale]['level_text']} - {slots[0]}
-2 {locales[locale]['level_text']} - {slots[1]}
-3 {locales[locale]['level_text']} - {slots[2]}
-4 {locales[locale]['level_text']} - {slots[3]}
-5 {locales[locale]['level_text']} - {slots[4]}
-6 {locales[locale]['level_text']} - {slots[5]}
-7 {locales[locale]['level_text']} - {slots[6]}
-8 {locales[locale]['level_text']} - {slots[7]}
-9 {locales[locale]['level_text']} - {slots[8]}
-"""
-                await msg.reply(content=f"{locales[locale]['response_intro']}:\n{r}")
-            except TimeoutError as e:
-                await interaction.followup.send(content=locales[locale]["timeout_error"], ephemeral=False)
-            except self.FormatError as e:
-                logging.info(f"[5e_SpellSlotInfo] An error has occurred: Format Error - {e}")
-                await interaction.followup.send(content=locales[locale]["format_error"], ephemeral=False)
-            except Exception as e:
-                logging.error(f"[5e_SpellSlotInfo] An error has occurred: {e}")
-                await interaction.followup.send(content=locales[locale]["generic_error"], ephemeral=False)
+                r = "\n".join(
+                    f"{i+1} {locales[locale]['level_text']} - {slots[i]}"
+                    for i in range(9)
+                )
+                await msg.reply(content=f"{locales[locale]['repsonse_intro']}:\n{r}")
+            else:
+                v = discord.ui.View(timeout=300)
+                o = [discord.SelectOption(label=cls) for cls in ['barbarian', 'bard', 'cleric', 'druid', 'fighter', 'monk', 'paladin', 'ranger', 'rogue', 'sorcerer', 'warlock', 'wizard']]
+                s = discord.ui.Select(min_values=1, max_values=1, options=o)
+                
+                async def class_parse(select_interaction: discord.Interaction):
+                    pg = self.PGBuilder.single_parse(s.values[0], pg_level)
+                    slots = self.__MATRIX_MC_SPELL_SLOT[pg.get_enchanter_level()]
+                    r = "\n".join(
+                        f"{i+1} {locales[locale]['level_text']} - {slots[i]}"
+                        for i in range(9)
+                    )
+                    await select_interaction.response.send_message(content=f"{locales[locale]['repsonse_intro']}:\n{r}")
+                
+                s.callback = class_parse
+                v.add_item(s)
+                await interaction.followup.send(f"{locales[locale]['ask_for_class']}", view=v)
+        except TimeoutError:
+            await interaction.followup.send(content=locales[locale]["timeout_error"], ephemeral=False)
+        except self.FormatError as e:
+            logging.info(f"[5e_SpellSlotInfo] An error has occurred: Format Error - {e}")
+            await interaction.followup.send(content=locales[locale]["format_error"], ephemeral=False)
+        except Exception as e:
+            logging.error(f"[5e_SpellSlotInfo] An error has occurred: {e}")
+            logging.error(traceback.format_exc())
+            await interaction.followup.send(content=locales[locale]["generic_error"], ephemeral=False)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(SpellSlotInfo(bot))
