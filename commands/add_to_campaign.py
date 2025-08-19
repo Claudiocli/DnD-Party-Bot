@@ -4,6 +4,7 @@ from discord.ext import commands
 from discord.ui import View, UserSelect, Select
 from dotenv import load_dotenv
 from asyncio import to_thread
+import traceback
 
 from util.db import TinySync
 from util.tools import check_is_user_admin
@@ -131,6 +132,7 @@ class AddToCampaign(commands.Cog):
     @add.error
     async def add_error(self, interaction: Interaction, error: Exception):
         logging.error(f"Error in add command: {error}")
+        logging.error(traceback.format_exc())
         locale = interaction.locale if interaction.locale in locales else "eng"
         await interaction.followup.send(content=locales[locale]["generic_error"])
 
