@@ -1,32 +1,12 @@
 from typing import List
 from dotenv import load_dotenv
 import os
-from pymongo import MongoClient
 import sqlite3
 from datetime import datetime
 from tinydb import TinyDB, Query
 from threading import Lock
 
 load_dotenv()
-
-class MongoSync:
-    __client = None
-
-    @classmethod
-    def get_client(cls):
-        if cls.__client is None:
-            cls.__client = MongoClient(
-                f"mongodb+srv://{os.getenv('MONGO_USER')}:{os.getenv('MONGO_PASSWD')}@clusterdnd.qxfls1g.mongodb.net/?authSource=admin&retryWrites=true&w=majority&appName=ClusterDnD",
-                serverSelectionTimeoutMS=3000,
-                socketTimeoutMS=3000,
-            )
-        return cls.__client
-
-    @classmethod
-    def close_client(cls):
-        if cls.__client:
-            cls.__client.close()
-            cls.__client = None
 
 class SqlDB:
     def add_poll(self, question, guild_id, channel_id, message_id, end_time: datetime):

@@ -4,7 +4,7 @@ from discord import Interaction, app_commands
 from discord.ext import commands
 from dotenv import load_dotenv
 
-from util.db import MongoSync
+# from util.db import MongoSync
 
 load_dotenv()
 
@@ -57,21 +57,21 @@ class SelectAnnouncementsChannel(commands.Cog):
         self.announcements_channels[interaction.guild.id] = interaction.channel.id
 
         # Update MongoDB
-        client_mongo = MongoSync.get_client()
-        db = client_mongo[os.getenv("MONGO_DB_NAME")]
-        ann = db[os.getenv("MONGO_A_COLLECTION_NAME")]
-        try:
-            ann.update_one({"guild": interaction.guild.id},
-                           {"$set": {"channel": interaction.channel.id}},
-                           upsert=True)
-            await interaction.response.send_message("Channel successfully selected", ephemeral=False)
-            logging.info(f"Announcements channel set for guild {interaction.guild.name}")
-        except Exception as e:
-            logging.error(f"[MONGODB ERROR] Error on inserting announcement channel in db: {e}")
-            await interaction.response.send_message("An error occurred while updating the database", ephemeral=False)
-        finally:
-            MongoSync.close_client()
+        # client_mongo = MongoSync.get_client()
+        # db = client_mongo[os.getenv("MONGO_DB_NAME")]
+        # ann = db[os.getenv("MONGO_A_COLLECTION_NAME")]
+        # try:
+        #     ann.update_one({"guild": interaction.guild.id},
+        #                    {"$set": {"channel": interaction.channel.id}},
+        #                    upsert=True)
+        #     await interaction.response.send_message("Channel successfully selected", ephemeral=False)
+        #     logging.info(f"Announcements channel set for guild {interaction.guild.name}")
+        # except Exception as e:
+        #     logging.error(f"[MONGODB ERROR] Error on inserting announcement channel in db: {e}")
+        #     await interaction.response.send_message("An error occurred while updating the database", ephemeral=False)
+        # finally:
+        #     MongoSync.close_client()
 
 # Cog setup
-async def setup(bot: commands.Bot):
-    await bot.add_cog(SelectAnnouncementsChannel(bot))
+# async def setup(bot: commands.Bot):
+#     await bot.add_cog(SelectAnnouncementsChannel(bot))

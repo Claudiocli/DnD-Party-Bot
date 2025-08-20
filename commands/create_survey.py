@@ -1,170 +1,160 @@
-from discord import app_commands, Interaction, Poll, Guild
-from discord.ext import commands
-from datetime import datetime, time, timedelta
-from enum import Enum
-import asyncio
 import logging
+import traceback
+from discord import InteractionMessage, PrivacyLevel, app_commands, Interaction, Poll
+from discord.ext import commands
+from discord.utils import utcnow
+from datetime import timedelta
+import asyncio
 
-from util.db import SqlDB
+DURATION_CHOICES = [
+    app_commands.Choice(name="1 hour", value=1),
+    app_commands.Choice(name="2 hours", value=2),
+    app_commands.Choice(name="4 hours", value=4),
+    app_commands.Choice(name="8 hours", value=8),
+    app_commands.Choice(name="12 hours", value=12),
+    app_commands.Choice(name="1 day", value=24),
+    app_commands.Choice(name="2 day", value=48),
+    app_commands.Choice(name="3 day", value=72),
+    app_commands.Choice(name="1 week", value=168),
+]
 
-WEEKDAY = {
-    "lunedì": 0,
-    "martedì": 1,
-    "mercoledì": 2,
-    "giovedì": 3,
-    "venerdì": 4,
-    "sabato": 5,
-    "domenica": 6
-}
+WEEKDAYS = [
+    "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
+]
 
-class Duration(Enum):
-    One = 1
-    Four = 4
-    Eight = 8
-    Twelve = 12
-    Twentyfour = 24
-    TwoDays = 48
-    ThreeDays = 76
-    OneWeek = 168
-    TwoWeek = 336
-    def get_duration(dur: str) -> timedelta:
-        if dur == "1 Hour":
-            return Duration.One.__get_deltatime_from_now()
-        if dur == "4 Hours":
-            return Duration.Four.__get_deltatime_from_now()
-        if dur == "8 Hours":
-            return Duration.Eight.__get_deltatime_from_now()
-        if dur == "12 Hours":
-            return Duration.Twelve.__get_deltatime_from_now()
-        if dur == "24 Hours":
-            return Duration.Twentyfour.__get_deltatime_from_now()
-        if dur == "2 Days":
-            return Duration.TwoDays.__get_deltatime_from_now()
-        if dur == "3 Days":
-            return Duration.ThreeDays.__get_deltatime_from_now()
-        if dur == "1 Week":
-            return Duration.OneWeek.__get_deltatime_from_now()
-        if dur == "2 Week":
-            return Duration.TwoWeek.__get_deltatime_from_now()
-    def __get_deltatime_from_now(self):
-        return timedelta(hours = self.value)
-    
-async def duration_autocomplete(self, interaction: Interaction) -> list[app_commands.Choice[str]]:
-    choices = ["1 Hour", "4 Hours", "8 Hours", "12 Hours", "24 Hours", "2 Days", "3 Days", "1 Week", "2 Week"]
-    return [ app_commands.Choice(name=choice, value=choice) for choice in choices ]
+def next_weekday_datetime(target_weekday: str, hour: int, minute: int = 0):
+    weekday_map = {
+        "Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3,
+        "Friday": 4, "Saturday": 5, "Sunday": 6
+    }
+    now = utcnow()
+    today_idx = now.weekday()
+    target_idx = weekday_map[target_weekday.capitalize()]
+    days_ahead = (target_idx - today_idx + 7) % 7
+    if days_ahead == 0:
+        days_ahead = 7  # Always get the next occurrence, not today
+    next_date = now + timedelta(days=days_ahead)
+    return next_date.replace(hour=hour, minute=0, second=0, microsecond=0)
+
+def validate_interval(interval: str):
+    # Accepts formats like "18-22"
+    return interval and interval.strip() and interval.strip().count('-') == 1 and all(
+        part.isdigit() and 0 <= int(part) <= 23 for part in interval.strip().split('-')
+    )
 
 class CreateSurvey(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
     @app_commands.command(
-        name = "survey",
-        description = "Crea un sondaggio per organizzare le tue sessioni!",
+        name="survey",
+        description="Create a survey for your session scheduling!"
     )
     @app_commands.describe(
-        question = "Question to ask for the survey",
-        duration = "Duration of the survey",
-        additional_message = "Optional additional message to add to the survey",
-        mon = "Monday",
-        tue = "Tuesday",
-        wed = "Wednesday",
-        thu = "Thursday",
-        fri = "Friday",
-        sat = "Saturday",
-        sun = "Sunday"
+        question="Question for the poll",
+        duration_hours="Poll duration",
+        monday="Time interval for Monday (e.g. '18-22')",
+        tuesday="Time interval for Tuesday (e.g. '20-23')",
+        wednesday="Time interval for Wednesday",
+        thursday="Time interval for Thursday",
+        friday="Time interval for Friday",
+        saturday="Time interval for Saturday",
+        sunday="Time interval for Sunday",
+        allow_multiselect="Allow users to select multiple options"
     )
-    @app_commands.autocomplete(duration=duration_autocomplete)
-    async def create_survey(self, interaction: Interaction, question: str, duration: str, additional_message: str = '', mon: str = '', tue: str = '', wed: str = '', thu: str = '', fri: str = '', sat: str = '', sun: str = ''):
-        if not (mon or tue or wed or thu or fri or sat or sun):
-            await interaction.response.send_message(content = "Nessun orario inserito" , ephemeral = True)
+    async def survey(
+        self,
+        interaction: Interaction,
+        question: str,
+        duration_hours: int = 1,
+        monday: str = None,
+        tuesday: str = None,
+        wednesday: str = None,
+        thursday: str = None,
+        friday: str = None,
+        saturday: str = None,
+        sunday: str = None,
+        allow_multiselect: bool = True
+    ):
+        opts = []
+        for day, interval in zip(WEEKDAYS, [monday, tuesday, wednesday, thursday, friday, saturday, sunday]):
+            if interval:
+                if not validate_interval(interval):
+                    await interaction.response.send_message(
+                        f"Invalid interval for {day}: '{interval}'. Use format like '18-22'.",
+                        ephemeral=True
+                    )
+                    return
+                opts.append(f"{day} {interval}")
+        if len(opts) < 2:
+            await interaction.response.send_message(
+                "Please provide at least two valid weekday intervals.",
+                ephemeral=True
+            )
             return
-        p = Poll(question = question, multiple = True, duration = Duration.get_duration(duration))
 
-        for i, day_text in enumerate([mon, tue, wed, thu, fri, sat, sun]):
-            if day_text:
-                d = next(k.capitalize() for k,v in WEEKDAY.items() if v == i)
-                p.add_answer(text = f"{d} ~ {day_text}")
-
-        if additional_message != '':
-            await interaction.response.send_message(content = additional_message, poll = p)
-        else:
-            await interaction.response.send_message(poll = p)
-        
-        sent = interaction.original_response()
-        end_time: datetime = (datetime.now() + Duration.get_duration(duration))
-
-        SqlDB.add_poll(
-            question = question,
-            guild_id = interaction.guild_id,
-            channel_id = interaction.channel_id,
-            message_id = sent.id,
-            end_time = end_time.isoformat()
+        poll = Poll(
+            question=question,
+            multiple=allow_multiselect,
+            duration=timedelta(hours=duration_hours)
         )
+        for o in opts:
+            poll.add_answer(text=o)
+        await interaction.response.send_message(
+            content=f"Poll created!",
+            poll=poll
+        )
+        msg = await interaction.original_response()
 
-def __get_next_week_datetime(target_day: str, start_hour: int, end_hour: int):
-    today = datetime.now().date()
-    today_weekday = today.weekday()
+        # Schedule the action
+        asyncio.create_task(self.on_poll_end(msg, duration_hours * 3600))
 
-    target_day = target_day.lower()
-    if target_day not in WEEKDAY:
-        raise ValueError(f"Invalid Day: {target_day}")
-    
-    day_index = WEEKDAY[target_day]
-
-    days_ahead = (day_index - today_weekday + 7) % 7
-    if days_ahead == 0:
-        days_ahead = 7
-
-    target_date = today + timedelta(days = days_ahead)
-
-    start_time = datetime.combine(target_date, time(start_hour))
-    end_time = datetime.combine(target_date, time(end_hour))
-
-    return start_time, end_time
-
-async def poll_watcher(bot: commands.bot):
-    await bot.wait_unitl_ready()
-    while not bot.is_closed():
-        next_poll = SqlDB.get_next_poll()
-        if not next_poll:
-            await asyncio.sleep(1000)
-            continue
-        
-        end_time = datetime.fromisoformat(next_poll[5])
-        wait_seconds = (end_time - datetime.now()).total_seconds() + 120 # 2 minutes buffer
-
-        if wait_seconds > 0:
-            await asyncio.sleep(wait_seconds)
-        
-        for poll in SqlDB.get_expired_polls():
-            guild: Guild = bot.get_guild(poll[2])
-            channel = guild.get_channel(poll[3])
-
-            await channel.send(f"🎉 Il sondaggio '{poll[1]}' è terminato! 🎉")
-
+    async def on_poll_end(self, msg: InteractionMessage, delay_seconds: int):
+        await asyncio.sleep(delay_seconds + 30) # Adding 30 sec delay to avoid internet shenanigans
+        channel = self.bot.get_channel(msg.channel_id)
+        if channel:
+            await channel.send(f"Poll {msg.message_id} has ended! Now I'm gonna create the event!")
+            name = channel.name.split("_organize")[0]
+            if not name:    return
+            stage = None
+            # Getting stage channel
+            for c in msg.guild.channels:
+                if c.name == f"{name}_vocal":
+                    stage = c
+                    break
+            if not stage:   return
+            # Calculating start and end times
+            v = msg.poll.victor_answer.text.split(' ')
+            day, t = v[0], v[1].split('-')
+            s, e = next_weekday_datetime(day, int(t[0])), next_weekday_datetime(day, int(t[1]))
+            # Creating the event
+            logging.info(f"Creating scheduled event for {name} from {s} to {e}")
             try:
-                message = await channel.fetch_message(poll[4])
-                if not message.poll:
-                    continue
-                winning_option = max(message.poll.answers, key=lambda a: a.vote_count())
-                day_part, time_range = winning_option.text.split('~')
-                day = day_part.strip()
-                start_hour, end_hour = map(lambda x: int(x.strip(), time_range.strip().split('-')))
-                start, end = __get_next_week_datetime(day, start_hour, end_hour)
-
-                await guild.create_scheduled_event(
-                    name = f"Session: {message.poll.question}",
-                    description = "Auto generated event",
-                    start_time = start,
-                    end_time = end,
-                    channel = channel,
+                await msg.guild.create_scheduled_event(
+                    name=f"{name} - Session",
+                    description=f"A session for the campaign {name} organized by the bot",
+                    channel=stage,
+                    start_time=s,
+                    end_time=e,
+                    privacy_level=PrivacyLevel.guild_only
                 )
             except Exception as e:
-                logging.error(f"[ERROR SURVEY] - {e}")
+                logging.error(f"Failed to create scheduled event: {e}")
+                logging.error(traceback.print_exc())
+                return
 
-            SqlDB.mark_poll_processed(poll[0])
 
-# Cog setup
-# async def setup(bot: commands.Bot):
-#     await bot.add_cog(CreateSurvey(bot))
-#     bot.loop.create_task(poll_watcher(bot))
+    @survey.autocomplete('duration_hours')
+    async def duration_autocomplete(
+        self,
+        interaction: Interaction,
+        current: str
+    ):
+        current = current.lower()
+        return [
+            choice for choice in DURATION_CHOICES
+            if current in choice.name.lower()
+        ][:25]
+
+async def setup(bot: commands.Bot):
+    await bot.add_cog(CreateSurvey(bot))
