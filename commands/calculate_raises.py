@@ -171,9 +171,11 @@ class CalculateRaises(commands.Cog):
     @app_commands.describe(rolls="Comma separeted dice roll results")
     @app_commands.describe(use_15="Pass true if your skill has 3 points or more")
     async def seven_sea_raises(self, interaction: discord.Interaction, rolls: str, use_15: Optional[bool] = False):
+        await interaction.response.defer(ephemeral=False)
+
         if rolls is None:
             locale = interaction.locale if interaction.locale in locales else "eng"
-            await interaction.response.send_message(content=locales[locale]["invalid_number"], ephemeral=True)
+            await interaction.followup.send(content=locales[locale]["invalid_number"], ephemeral=True)
             return
         
         rolls_int: list[int]
@@ -182,10 +184,10 @@ class CalculateRaises(commands.Cog):
         except ValueError:
             # mammt
             locale = interaction.locale if interaction.locale in locales else "eng"
-            await interaction.response.send_message(content=locales[locale]["invalid_number"], ephemeral=True)
+            await interaction.followup.send(content=locales[locale]["invalid_number"], ephemeral=True)
             return
 
-        await interaction.response.send_message(str( await display_raises_result(rolls_int, use_15)))
+        await interaction.followup.send(str( await display_raises_result(rolls_int, use_15)))
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(CalculateRaises(bot))
